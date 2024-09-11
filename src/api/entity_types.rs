@@ -13,21 +13,43 @@ pub enum EntityTypes {
   CategoryType(Category)
 }
 
+/// Project category entity types.
+/// https://help.rengabim.com/api/group___project_info_types.html
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Category {
+  /// Duct accessory category type. 
   DuctAccessory,
+
+  /// Duct fitting category type.
   DuctFitting,
+
+  /// Electric distribution board category type.
   ElectricDistributionBoard,
+
+  /// Equipment category type.
   Equipment,
+
+  /// Lighting fixture category type.
   LightingFixture,
+
+  /// Mechanical equipment category type.
   MechanicalEquipment,
+
+  /// Pipe accessory category type.
   PipeAccessory,
+
+  /// Pipe fitting category type.
   PipeFitting,
+
+  /// Plumbing fixture category type.
   PlumbingFixture,
+
+  /// Wiring accessory category type.
   WiringAccessory 
 }
 
 impl Category {
+  /// Returns GUID of the category.
   pub fn as_guid(&self) -> GUID {
     match self {
       Self::DuctAccessory => guid!("46c07d12-8f76-4537-a473-08d52395baba"),
@@ -43,6 +65,17 @@ impl Category {
     }
   }
 
+  /// Returns sanitized string representation of the GUID.
+  /// - Braces are omitted.
+  /// - Hexadecimal digits are represented in upper case.
+  /// 
+  /// Example: 
+  /// ```rust
+  /// assert_eq!(
+  ///   Category::ElectricDistributionBoard.to_sanitized_string(), 
+  ///   "D547F002-4A74-41BF-B1F0-ED8F5846098F"
+  /// );
+  /// ```
   pub fn to_sanitized_string(&self) -> String {
     Self::guid_to_string(self.as_guid())
   }
