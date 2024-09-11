@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate guid;
 
-#[cfg(windows)]
+//#[cfg(windows)]
 mod native;
 mod error;
 
-#[cfg(windows)]
+//#[cfg(windows)]
 mod api;
 
 pub use error::{
