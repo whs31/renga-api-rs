@@ -14,7 +14,8 @@ pub enum EntityTypes {
 }
 
 /// Project category entity types.
-/// https://help.rengabim.com/api/group___project_info_types.html
+/// 
+/// See [Official documentation](https://help.rengabim.com/api/group___project_info_types.html) for details.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Category {
   /// Duct accessory category type. 

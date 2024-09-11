@@ -15,11 +15,13 @@ pub use error::{
 
 pub use api::{
   Application,
+  Project,
   Version,
   Category,
   EntityTypes
 };
 
 pub mod meta {
+  /// Renga version this crate is based on.
   pub static RENGA_VERSION: crate::Version = crate::Version::new(8, 1, 0);
 }
