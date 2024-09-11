@@ -15,7 +15,9 @@ pub use error::{
 
 pub use api::{
   Application,
-  Version
+  Version,
+  Category,
+  EntityTypes
 };
 
 pub mod meta {

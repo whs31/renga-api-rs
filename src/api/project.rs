@@ -1,3 +1,4 @@
+use std::path::Path;
 use crate::{
   native::Dispatch,
   Result,
@@ -47,6 +48,23 @@ impl Project {
       .handle
       .call("HasActiveOperation", None)?
       .as_bool()
+  }
+
+  // todo: return entity instead of ()
+  pub fn import_category(&mut self, category: Category, path: &Path) -> Result<()> {
+    if !self.has_transaction()? {
+      return Err(Error::NoActiveTransaction);
+    }
+    let category_str = category.to_sanitized_string();
+    let path_str = path.to_string_lossy().to_string();
+    let entity = self
+      .handle
+      .call("ImportCategoryS", Some(vec![category_str.into(), path_str.into()]))?
+      .into_dispatch()?;
+    if entity.is_null() {
+      return Err(Error::Internal("Failed to import category".to_owned()));
+    }
+    Ok(())
   }
 }
 
@@ -116,7 +134,6 @@ mod tests {
     transaction.commit()?;
 
     assert!(!project.has_transaction()?);
-    std::thread::sleep(std::time::Duration::from_millis(5000));
 
     Ok(())
   }

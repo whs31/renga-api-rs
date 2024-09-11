@@ -11,6 +11,15 @@ pub enum Error {
   #[error("Internal error: {0}")]
   Internal(String),
 
+  #[error("Invalid entity type: {0}")]
+  InvalidCategory(crate::EntityTypes),
+
+  #[error("No active transaction. Start new transaction first.")]
+  NoActiveTransaction,
+
+  #[error("Error parsing value from string: {0}")]
+  ParseError(String),
+
   #[error("WinAPI error: {0}")]
   WinApi(#[from] windows::core::Error),
 }
