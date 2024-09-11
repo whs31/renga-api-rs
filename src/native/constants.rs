@@ -1,0 +1,2 @@
+pub const LOCALE_USER_DEFAULT: u32 = 0x0400;
+pub const LOCALE_SYSTEM_DEFAULT: u32 = 0x0800;
