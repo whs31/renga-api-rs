@@ -11,26 +11,45 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    name: doc-x86_64-pc-windows-msvc
+    runs-on: windows-latest
     steps:
-      - name: Checkout repository
+      - name: disable git eol translation
+        run: git config --global core.autocrlf false
+
+      - name: checkout
         uses: actions/checkout@v4
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Configure cache
-        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rustup using win.rustup.rs
+        run: |
+          # Disable the download progress bar which can cause perf issues
+          $ProgressPreference = "SilentlyContinue"
+          Invoke-WebRequest https://win.rustup.rs/ -OutFile rustup-init.exe
+          .\rustup-init.exe -y --default-host=x86_64-pc-windows-msvc --default-toolchain=none
+          del rustup-init.exe
+          rustup target add x86_64-pc-windows-msvc
+        shell: powershell
+
+      - name: Build and Test
+        shell: cmd
+        run: ci\build_and_test.bat
+
       - name: Setup pages
         id: pages
         uses: actions/configure-pages@v4
+
       - name: Clean docs folder
         run: cargo clean --doc
+
       - name: Build docs
         run: cargo doc --no-deps
-      - name: Add redirect
-        run: echo '<meta http-equiv="refresh" content="0;url=aoc/index.html">' > target/doc/index.html
-      - name: Remove lock file
-        run: rm target/doc/.lock
+
+      # - name: Add redirect
+      #   run: echo '<meta http-equiv="refresh" content="0;url=aoc/index.html">' > target/doc/index.html
+
+      # - name: Remove lock file
+      #   run: rm target/doc/.lock
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
