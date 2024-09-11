@@ -44,11 +44,11 @@ jobs:
       - name: Build docs
         run: cargo doc --no-deps
 
-      # - name: Add redirect
-      #   run: echo '<meta http-equiv="refresh" content="0;url=aoc/index.html">' > target/doc/index.html
+      - name: Add redirect
+        run: Set-Content -Path "target/doc/index.html" -Value '<meta http-equiv="refresh" content="0;url=renga-api-rs/index.html">'
 
-      # - name: Remove lock file
-      #   run: rm target/doc/.lock
+      - name: Remove lock file
+        run: Remove-Item -Path "target/doc/.lock"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
