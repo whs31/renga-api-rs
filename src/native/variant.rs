@@ -53,11 +53,17 @@ impl Variant {
   pub fn as_unsigned(&self) -> Result<u32> { Ok(u32::try_from(&self.0)?) }
   pub fn as_double(&self) -> Result<f64> { Ok(f64::try_from(&self.0)?) }
 
-  pub unsafe fn as_record_unchecked(&self) -> Result<(*mut c_void, *mut c_void)> {
+  pub unsafe fn as_record_ptr_unchecked(&self) -> Result<(*mut c_void, *mut c_void)> {
     Ok((
       self.0.as_raw().Anonymous.Anonymous.Anonymous.Anonymous.pvRecord,
       self.0.as_raw().Anonymous.Anonymous.Anonymous.Anonymous.pRecInfo
     ))
+  }
+
+  pub unsafe fn as_record_unchecked<T>(&self) -> Result<T> where T: Sized + Clone {
+    let (ptr, _) = self.as_record_ptr_unchecked()?;
+    let record = std::mem::transmute::<_, &T>(ptr);
+    Ok(record.clone())
   }
   
   pub fn into_string(&self) -> Result<String> { Ok(BSTR::try_from(&self.0)?.to_string()) }

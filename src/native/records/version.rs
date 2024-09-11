@@ -13,8 +13,6 @@ pub struct Version {
 
 impl Version {
   pub unsafe fn from_variant(variant: &Variant) -> Result<Self> {
-    let record_ptr = variant.as_record_unchecked()?.0;
-    let version = std::mem::transmute::<_, &Version>(record_ptr);
-    Ok(version.clone())
+    variant.as_record_unchecked::<Self>()
   }
 }

@@ -4,7 +4,7 @@ use crate::{
   Result,
   Error
 };
-use super::Category;
+use super::{Category, Entity};
 
 pub struct Project {
   parent_handle: Dispatch,
@@ -51,20 +51,18 @@ impl Project {
   }
 
   // todo: return entity instead of ()
-  pub fn import_category(&mut self, category: Category, path: &Path) -> Result<()> {
-    if !self.has_transaction()? {
-      return Err(Error::NoActiveTransaction);
-    }
+  pub fn import_category(&mut self, category: Category, path: &Path) -> Result<Entity> {
+    // if !self.has_transaction()? {
+    //   return Err(Error::NoActiveTransaction);
+    // }
     let category_str = category.to_sanitized_string();
-    let path_str = path.to_string_lossy().to_string();
-    let entity = self
+    let path_str: String = path.to_string_lossy().to_string();
+    let entity: Entity = self
       .handle
       .call("ImportCategoryS", Some(vec![category_str.into(), path_str.into()]))?
-      .into_dispatch()?;
-    if entity.is_null() {
-      return Err(Error::Internal("Failed to import category".to_owned()));
-    }
-    Ok(())
+      .into_dispatch()?
+      .try_into()?;
+    Ok(entity)
   }
 }
 
@@ -103,6 +101,7 @@ impl ProjectTransaction {
 
 #[cfg(test)]
 mod tests {
+  use test_context::test_context;
   use crate::*;
 
   #[test]
@@ -110,35 +109,48 @@ mod tests {
     checks::send_and_sync::<Application>();
   }
 
+  #[test_context(ProjectContext)]
   #[test]
-  fn test_close_project() -> anyhow::Result<()> {
-    let mut app = Application::new()?;
-    let mut project = app.new_project()?;
+  fn test_close_project(ctx: &mut ProjectContext) -> anyhow::Result<()> {
+    assert!(ctx.app.project()?.is_some());
 
-    assert!(app.project()?.is_some());
+    ctx.project.close(false)?;
 
-    project.close(false)?;
-
-    assert!(app.project()?.is_none());
-    assert!(project.close(true).is_err());
+    assert!(ctx.app.project()?.is_none());
+    assert!(ctx.project.close(true).is_err());
 
     Ok(())
   }
 
+  #[test_context(ProjectContext)]
   #[test]
-  fn test_transaction() -> anyhow::Result<()> {
-    let mut app = Application::new()?;
-    let mut project = app.new_project()?;
+  fn test_transaction(ctx: &mut ProjectContext) -> anyhow::Result<()> {
+    assert!(ctx.app.project()?.is_some());
 
-    assert!(app.project()?.is_some());
+    let mut transaction = ctx.project.start_transaction()?;
 
-    let mut transaction = project.start_transaction()?;
-
-    //assert!(project.has_transaction()?);
+    //assert!(ctx.project.has_transaction()?);
 
     transaction.commit()?;
 
-    assert!(!project.has_transaction()?);
+    assert!(!ctx.project.has_transaction()?);
+
+    Ok(())
+  }
+
+  #[test_context(ProjectContext)]
+  #[test]
+  fn test_import_category(ctx: &mut ProjectContext) -> anyhow::Result<()> {
+    let file = external_file("style_category.rst")?;
+    let mut transaction = ctx.project.start_transaction()?;
+
+    let category = ctx.project.import_category(Category::Equipment, &file)?;
+    transaction.commit()?;
+
+    assert!(ctx.project.has_unsaved_changes()?);
+    assert!(category.id()? > 0);
+
+    // todo: entity is empty here for some reason
 
     Ok(())
   }

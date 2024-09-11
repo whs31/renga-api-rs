@@ -57,7 +57,7 @@ impl Application {
     }
   }
 
-  #[inline(always)]
+  #[inline]
   pub fn version(&self) -> Result<Version> {
     let var = self.handle.get("Version")?;
     let record = unsafe {
@@ -66,23 +66,23 @@ impl Application {
     Ok(Version::new(record.major as u64, record.minor as u64, record.build as u64))
   }
 
-  #[inline(always)]
+  #[inline]
   pub fn enabled(&self) -> Result<bool> {
     Ok(self.handle.get("Enabled")?.as_bool()?)
   }
 
-  #[inline(always)]
+  #[inline]
   pub fn visible(&self) -> Result<bool> {
     Ok(self.handle.get("Visible")?.as_bool()?)
   }
 
-  #[inline(always)]
+  #[inline]
   pub fn set_enabled(&mut self, value: bool) -> Result<&mut Self> {
     self.handle.set("Enabled", value.into())?;
     Ok(self)
   }
 
-  #[inline(always)]
+  #[inline]
   pub fn set_visible(&mut self, value: bool) -> Result<&mut Self> {
     self.handle.set("Visible", value.into())?;
     Ok(self)
@@ -108,9 +108,9 @@ impl Application {
     Ok(project.unwrap())
   }
 
-  fn has_project(&self) -> Result<bool> {
-    Ok(self.handle.call("HasProject", None)?.as_bool()?)
-  }
+  // fn has_project(&self) -> Result<bool> {
+  //   Ok(self.handle.call("HasProject", None)?.as_bool()?)
+  // }
 
   fn get_project(&mut self) -> Result<Option<Project>> {
     let var = self.handle.get("Project")?.into_dispatch()?;
@@ -154,6 +154,7 @@ impl Drop for Application {
 
 #[cfg(test)]
 mod tests {
+  use test_context::test_context;
   use crate::*;
 
   #[test]
@@ -161,11 +162,11 @@ mod tests {
     checks::send_and_sync::<Application>();
   }
     
+  #[test_context(RengaContext)]
   #[test]
-  fn test_open_close() -> anyhow::Result<()> {
-    let mut app = Application::new()?;
-    let version = app.version()?;
-    let project = app.project()?;
+  fn test_open_close(ctx: &mut RengaContext) -> anyhow::Result<()> {
+    let version = ctx.app.version()?;
+    let project = ctx.app.project()?;
 
     assert!(version > Version::parse("8.0.0")?);
     assert!(project.is_none());
@@ -173,12 +174,12 @@ mod tests {
     Ok(())
   }
 
+  #[test_context(RengaContext)]
   #[test]
-  fn test_create_project() -> anyhow::Result<()> {
-    let mut app = Application::new()?;
-    let project = app.new_project()?;
+  fn test_create_project(ctx: &mut RengaContext) -> anyhow::Result<()> {
+    let project = ctx.app.new_project()?;
 
-    assert!(app.project()?.is_some());
+    assert!(ctx.app.project()?.is_some());
     assert!(!project.has_unsaved_changes()?);
 
     Ok(())
