@@ -117,3 +117,6 @@ impl Dispatch {
     }
   }
 }
+
+unsafe impl Send for Dispatch {}
+unsafe impl Sync for Dispatch {}

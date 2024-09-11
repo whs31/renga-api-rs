@@ -106,6 +106,11 @@ mod tests {
   use crate::*;
 
   #[test]
+  fn test_send_and_sync() {
+    checks::send_and_sync::<Application>();
+  }
+
+  #[test]
   fn test_close_project() -> anyhow::Result<()> {
     let mut app = Application::new()?;
     let mut project = app.new_project()?;

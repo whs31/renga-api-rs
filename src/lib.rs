@@ -4,6 +4,7 @@ extern crate guid;
 //#[cfg(windows)]
 mod native;
 mod error;
+mod checks;
 
 //#[cfg(windows)]
 mod api;

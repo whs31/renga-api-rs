@@ -157,6 +157,11 @@ mod tests {
   use crate::*;
 
   #[test]
+  fn test_send_and_sync() {
+    checks::send_and_sync::<Application>();
+  }
+    
+  #[test]
   fn test_open_close() -> anyhow::Result<()> {
     let mut app = Application::new()?;
     let version = app.version()?;
