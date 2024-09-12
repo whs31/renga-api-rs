@@ -1,8 +1,7 @@
-[![Build](https://github.com/whs31/renga-api-rs/actions/workflows/build.yml/badge.svg)](https://github.com/whs31/renga-api-rs/actions/workflows/build.yml)[![Docs](https://github.com/whs31/renga-api-rs/actions/workflows/docs.yml/badge.svg)](https://github.com/whs31/renga-api-rs/actions/workflows/docs.yml)
+[![Build](https://github.com/whs31/renga-api-rs/actions/workflows/build.yml/badge.svg)](https://github.com/whs31/renga-api-rs/actions/workflows/build.yml)[![Latest version](https://img.shields.io/crates/v/renga-api-rs.svg)](https://crates.io/crates/renga-api-rs)[![Docs](https://github.com/whs31/renga-api-rs/actions/workflows/docs.yml/badge.svg)](https://github.com/whs31/renga-api-rs/actions/workflows/docs.yml)![License](https://img.shields.io/crates/l/renga-api-rs.svg)
 
 This crate provides (*incomplete*) Rust bindings for the [Renga](https://www.rengabim.com) COM API.
 
-> [!NOTE]
 > Only Windows is supported at the moment.
 
 ### Logging
