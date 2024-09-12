@@ -1,4 +1,4 @@
-use std::{fmt::format, path::Path};
+use std::path::Path;
 use crate::{
   native::Dispatch,
   Result,
