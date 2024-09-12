@@ -32,6 +32,8 @@ impl Entity {
       .handle
       .get("TypeIdS")?
       .into_string()?
+      .trim_start_matches("{")
+      .trim_end_matches("}")
       .parse()
   }
 
@@ -40,6 +42,8 @@ impl Entity {
       .handle
       .get("UniqueIdS")?
       .into_string()?
+      .trim_start_matches("{")
+      .trim_end_matches("}")
       .parse()
   }
 }
@@ -74,23 +78,25 @@ impl EntityCollection {
     Ok(Self { handle })
   }
 
-  pub fn contains_id(&self, id: i32) -> Result<bool> {
-    self.handle.call("Contains", Some(vec![id.into()]))?.as_bool()
-  }
-  pub fn contains_uuid(&self, uuid: UUID) -> Result<bool> {
-    let uuid_str = uuid.to_string();
-    self
-      .handle
-      .call("ContainsUniqueIdS", Some(vec![uuid_str.into()]))?
-      .as_bool()
-  }
-  pub fn get_by_id(&self, id: i32) -> Result<Entity> {
-    self
-      .handle
-      .call("GetById", Some(vec![id.into()]))?
-      .into_dispatch()?
-      .try_into()
-  }
+  // pub fn contains_id(&self, id: i32) -> Result<bool> {
+  //   self.handle.call("Contains", Some(vec![id.into()]))?.as_bool()
+  // }
+
+  // pub fn contains_uuid(&self, uuid: UUID) -> Result<bool> {
+  //   let uuid_str = uuid.to_string();
+  //   self
+  //     .handle
+  //     .call("ContainsUniqueIdS", Some(vec![uuid_str.into()]))?
+  //     .as_bool()
+  // }
+
+  // pub fn get_by_id(&self, id: i32) -> Result<Entity> {
+  //   self
+  //     .handle
+  //     .call("GetById", Some(vec![id.into()]))?
+  //     .into_dispatch()?
+  //     .try_into()
+  // }
 
   pub fn get(&self, index: usize) -> Result<Entity> {
     let idx = index as i32;
@@ -101,14 +107,14 @@ impl EntityCollection {
       .try_into()
   }
 
-  pub fn get_by_uuid(&self, uuid: UUID) -> Result<Entity> {
-    let uuid_str = uuid.to_string();
-    self
-      .handle
-      .call("GetByUniqueIdS", Some(vec![uuid_str.into()]))?
-      .into_dispatch()?
-      .try_into()
-  }
+  // pub fn get_by_uuid(&self, uuid: UUID) -> Result<Entity> {
+  //   let uuid_str = uuid.to_string();
+  //   self
+  //     .handle
+  //     .call("GetByUniqueIdS", Some(vec![uuid_str.into()]))?
+  //     .into_dispatch()?
+  //     .try_into()
+  // }
 
   pub fn len(&self) -> Result<usize> {
     self
@@ -116,6 +122,15 @@ impl EntityCollection {
       .get("Count")?
       .as_int()
       .map(|count| count as usize)
+  }
+
+  pub fn into_vec(self) -> Result<Vec<Entity>> {
+    let len = self.len()?;
+    let mut vec = Vec::with_capacity(len);
+    for i in 0..len {
+      vec.push(self.get(i)?);
+    }
+    Ok(vec)
   }
 }
 

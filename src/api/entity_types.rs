@@ -104,6 +104,7 @@ impl FromStr for Category {
     let sanitized = s
       .trim()
       .to_lowercase()
+      .replace(" ", "_")
       .trim_end_matches("_category")
       .to_owned();
     match sanitized.as_str() {

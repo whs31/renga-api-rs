@@ -18,6 +18,15 @@ impl UUID {
   pub fn as_guid(&self) -> &GUID { &self.0 }
 }
 
+impl PartialEq for UUID {
+  fn eq(&self, other: &Self) -> bool { 
+    self.0.Data1 == other.0.Data1 
+      && self.0.Data2 == other.0.Data2
+      && self.0.Data3 == other.0.Data3
+      && self.0.Data4 == other.0.Data4
+  }
+}
+
 impl Default for UUID {
   fn default() -> Self { Self(guid!("00000000-0000-0000-0000-000000000000")) }
 }

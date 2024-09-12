@@ -1,10 +1,14 @@
-use std::path::Path;
+use std::{fmt::format, path::Path};
 use crate::{
   native::Dispatch,
   Result,
   Error
 };
-use super::{Category, Entity};
+use super::{
+  Category, 
+  Entity, 
+  EntityCollection
+};
 
 pub struct Project {
   parent_handle: Dispatch,
@@ -48,6 +52,14 @@ impl Project {
       .handle
       .call("HasActiveOperation", None)?
       .as_bool()
+  }
+
+  pub fn category(&self, category: Category) -> Result<EntityCollection> {
+    Ok(self
+      .handle
+      .get(format!("{category:?}Categories").as_str())?
+      .into_dispatch()?
+      .try_into()?)
   }
 
   // todo: return entity instead of ()
@@ -101,6 +113,7 @@ impl ProjectTransaction {
 
 #[cfg(test)]
 mod tests {
+  use api::UUID;
   use test_context::test_context;
   use crate::*;
 
@@ -149,8 +162,20 @@ mod tests {
 
     assert!(ctx.project.has_unsaved_changes()?);
     assert!(category.id()? > 0);
+    assert!(category.type_id()? != UUID::default());
+    assert!(category.unique_id()? != UUID::default());
 
-    // todo: entity is empty here for some reason
+    let entity = ctx
+      .project
+      .category(Category::Equipment)?
+      .into_vec()?
+      .iter()
+      .find(|e| e.name().unwrap() == "asd 1")
+      .unwrap()
+      .clone();
+
+    assert_eq!(entity.name()?, "asd 1".to_owned());
+    assert_eq!(entity.unique_id()?, category.unique_id()?);
 
     Ok(())
   }
