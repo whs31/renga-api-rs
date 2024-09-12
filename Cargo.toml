@@ -6,6 +6,7 @@ authors = [
   "whs31 <riazantsev_dl@rengabim.com>"
 ]
 license = "MIT"
+readme = "README.md"
 repository = "https://github.com/whs31/renga-api-rs"
 homepage = "https://github.com/whs31/renga-api-rs"
 keywords = ["renga", "com", "api", "bindings"]
