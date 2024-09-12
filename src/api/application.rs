@@ -14,12 +14,29 @@ use super::{
 
 const CLASS_NAME: &str = "Renga.Application.1";
 
+/// Represents entire Renga application.
+/// 
+/// Currently, you can obtain instance of this struct only by using [Application::new] or [Application::new_hidden] methods.
+/// Accessing running instances of Renga is still in development.
+/// 
+/// See [Official documentation](https://help.rengabim.com/api/interface_i_application.html)
 pub struct Application {
   handle: Dispatch,
   _com: ComRuntime
 }
 
 impl Application {
+  /// Creates new instance of Renga application[^note].
+  /// 
+  /// See [Application::new_hidden]
+  /// 
+  /// [^note]: Renga must be registered in Windows registry for this method to work.
+  /// You can do it by launching powershell as administrator in Renga folder and running the following command:
+  /// ```powershell
+  /// ./RengaProfessional.exe /regserver
+  /// ```
+  /// 
+  /// If your Renga distribution comes from official installer, you can skip this step - Renga will be automatically registered.
   pub fn new() -> Result<Self> {
     let _com = ComRuntime::new()?;
     let mut this = Self {
@@ -33,6 +50,10 @@ impl Application {
     Ok(this)
   }
 
+  /// Creates new headless instance of Renga application.
+  /// 
+  /// The ability to launch Renga without a GUI is advantageous for testing purposes. Actually, this crate using this feature for self-testing!
+  /// See [Application::new]
   pub fn new_hidden() -> Result<Self> {
     let _com = ComRuntime::new()?;
     let mut this = Self {
@@ -46,18 +67,27 @@ impl Application {
     Ok(this)
   }
 
+  /// Tries to close Renga application.
+  ///
+  /// See [Application::quit]
   pub fn try_quit(&mut self) -> Result<()> {
     self.handle.call("Quit", None)?;
     log::debug!("Renga Application closed");
     Ok(())
   }
 
+  /// Closes Renga application.
+  /// 
+  /// This method will not fail. If any error occurs, it will be logged.
+  /// 
+  /// See [Application::try_quit]
   pub fn quit(&mut self) {
     if let Err(error) = self.try_quit() {
       log::error!("Renga Application close failed: {error:?}");
     }
   }
 
+  /// Returns semantic version of Renga application.
   #[inline]
   pub fn version(&self) -> Result<Version> {
     let var = self.handle.get("Version")?;
@@ -67,28 +97,46 @@ impl Application {
     Ok(Version::new(record.major as u64, record.minor as u64, record.build as u64))
   }
 
+  /// Returns `true`, if user input is enabled in this instance. 
+  /// 
+  /// See [Application::set_enabled]
   #[inline]
   pub fn enabled(&self) -> Result<bool> {
     Ok(self.handle.get("Enabled")?.as_bool()?)
   }
 
+  /// Returns `true`, if user interface is visible in this instance. 
+  /// 
+  /// See [Application::set_visible]
   #[inline]
   pub fn visible(&self) -> Result<bool> {
     Ok(self.handle.get("Visible")?.as_bool()?)
   }
 
+  /// Sets user input to be enabled or disabled in this instance. 
+  /// 
+  /// See [Application::enabled]
   #[inline]
   pub fn set_enabled(&mut self, value: bool) -> Result<&mut Self> {
     self.handle.set("Enabled", value.into())?;
     Ok(self)
   }
 
+  /// Sets user interface to be visible or hidden in this instance.
+  /// 
+  /// See [Application::visible]
   #[inline]
   pub fn set_visible(&mut self, value: bool) -> Result<&mut Self> {
     self.handle.set("Visible", value.into())?;
     Ok(self)
   }
 
+  /// Returns currently active project.
+  /// 
+  /// Can be `None` if there is no active project opened.
+  /// 
+  /// You can create new project by calling [Application::new_project].
+  /// Support for opening existing project is not implemented yet.
   pub fn project(&mut self) -> Result<Option<Project>> {
     Ok(match self.get_project() {
       Ok(project) => project,
@@ -96,6 +144,7 @@ impl Application {
     })
   }
 
+  /// Creates new project.
   pub fn new_project(&mut self) -> Result<Project> {
     // check for unsaved changes etc
     let error = self.handle.call("CreateProject", None)?.as_int()?;
@@ -121,12 +170,10 @@ impl Application {
 
   // Properties left:
   // ActiveView       [get]
-  // Project          [get]
   // Selection        [get]
   // UI               [get]
   // 
   // Methods left:
-  // CloseProject
   // CreateIfcExportSettings
   // CreateProjectFromTemplate
   // GetCurrentLocale
@@ -137,6 +184,12 @@ impl Application {
   // SetLastError
 }
 
+/// Drop implementation for Application. 
+/// 
+/// - Closes project if it exists, discarding any changes.
+/// - Closes Renga application.
+/// 
+/// This function never fails or panics. If any error occurs, it will be logged.
 impl Drop for Application {
   fn drop(&mut self) {
     let _ = self

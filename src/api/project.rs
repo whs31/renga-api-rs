@@ -10,12 +10,39 @@ use super::{
   EntityCollection
 };
 
+/// Represents active Renga project.
+/// 
+/// Provides methods to work with a Renga project. Can be obtained using [crate::Application::project] method.
+/// 
+/// By default, project is immutable. To achieve mutability, you must follow this steps:
+/// - Create new transaction using [Project::start_transaction] method. Store it in a mutable variable.
+/// - Do something with the project.
+/// - Commit the transaction using [ProjectTransaction::commit] or discard it using [ProjectTransaction::rollback] methods.
+/// 
+/// For example:
+/// ```no_run
+/// use renga_api_rs as renga;
+/// let mut app = renga::Application::new().unwrap();
+/// let mut project = app.new_project().unwrap();
+/// let mut transaction = project.start_transaction().unwrap();
+/// 
+/// // do something with the project
+/// transaction.commit().unwrap();
+/// ```
+/// 
+/// You can safely clone this struct and use it in multiple threads.
+/// 
+/// See [Official documentation](https://help.rengabim.com/api/interface_i_project.html)
 pub struct Project {
   parent_handle: Dispatch,
   handle: Dispatch
 }
 
 impl Project {
+  /// Creates new instance of Project from native handles.
+  /// 
+  /// To get an instance of this structure without using native handles, use 
+  /// the [crate::Application::new_project] or [crate::Application::project] methods.
   pub fn new(parent_handle: Dispatch, handle: Dispatch) -> Result<Self> {
     if handle.is_null() || parent_handle.is_null() {
       return Err(Error::Internal(format!("Project handle is null")));
@@ -23,7 +50,7 @@ impl Project {
     Ok(Self { parent_handle, handle })
   }
 
-  // https://help.rengabim.com/api/interface_i_project.html
+  /// Returns `true`` if project has unsaved changes.
   pub fn has_unsaved_changes(&self) -> Result<bool> {
     self
       .handle
@@ -31,6 +58,9 @@ impl Project {
       .as_bool()
   }
 
+  /// Closes project.
+  /// 
+  /// If project has unsaved changes, you can discard them using `discard_changes` parameter.
   pub fn close(&mut self, discard_changes: bool) -> Result<()> {
     let error = self.parent_handle.call("CloseProject", Some(vec![discard_changes.into()]))?.as_int()?;
     if error != 0 {
@@ -39,6 +69,9 @@ impl Project {
     Ok(())
   }
 
+  /// Creates new transaction.
+  /// 
+  /// See [ProjectTransaction] for more information.
   pub fn start_transaction(&mut self) -> Result<ProjectTransaction> {
     if self.has_transaction()? {
       return Err(Error::InvalidOperation("Project already has an active transaction".to_owned()));
@@ -47,6 +80,7 @@ impl Project {
     ProjectTransaction::new(handle)
   }
 
+  /// Returns `true` if project has an active transaction.
   pub fn has_transaction(&self) -> Result<bool> {
     self
       .handle
@@ -54,6 +88,32 @@ impl Project {
       .as_bool()
   }
 
+  /// Returns collection of entities of given category.
+  /// 
+  /// You can use this method to access entities inside categories.
+  /// For example, to get style template with name matching string `Pump`:
+  /// ```no_run
+  /// use renga_api_rs as renga;
+  /// use anyhow::Result;
+  /// 
+  /// fn style_template() -> Result<renga::Entity> {
+  ///   let mut app = renga::Application::new()?;
+  ///   let mut project = app.new_project()?;
+  ///   let pump_style_template = project
+  ///     .category(renga::Category::Equipment)?
+  ///     .into_vec()?
+  ///     .into_iter()
+  ///     .find(|entity| entity.name().unwrap_or_default() == "Pump")
+  ///     .unwrap();
+  ///   Ok(pump_style_template)
+  /// }
+  /// 
+  /// let pump_style_template = style_template().unwrap();
+  /// assert_eq!(
+  ///   pump_style_template.name().unwrap(), 
+  ///   "Pump"
+  /// );
+  /// ```
   pub fn category(&self, category: Category) -> Result<EntityCollection> {
     Ok(self
       .handle
@@ -78,11 +138,16 @@ impl Project {
   }
 }
 
+/// Represents project transaction, created by [Project::start_transaction].
 pub struct ProjectTransaction {
   handle: Dispatch
 }
 
 impl ProjectTransaction {
+  /// Creates new instance of ProjectTransaction from native handle.
+  /// 
+  /// To get an instance of this structure without using native handles, use
+  /// the [Project::start_transaction] method.
   pub fn new(handle: Dispatch) -> Result<Self> {
     log::trace!("starting transaction");
     if handle.is_null() {
@@ -93,12 +158,14 @@ impl ProjectTransaction {
     Ok(this)
   }
 
+  /// Commits changes made in transaction to the project.
   pub fn commit(&mut self) -> Result<()> {
     log::trace!("committing transaction");
     self.handle.call("Apply", None)?;
     Ok(())
   }
 
+  /// Rolls back changes made in transaction.
   pub fn rollback(&mut self) -> Result<()> {
     log::trace!("rolling back transaction");
     self.handle.call("Rollback", None)?;

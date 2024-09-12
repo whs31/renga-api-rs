@@ -5,7 +5,10 @@ mod entity;
 mod uuid;
 
 pub use application::Application;
-pub use project::Project;
+pub use project::{
+  Project,
+  ProjectTransaction
+};
 pub use semver::Version;
 pub use guid::{
   guid,
