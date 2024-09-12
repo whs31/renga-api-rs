@@ -45,7 +45,7 @@ jobs:
         run: cargo doc --no-deps
 
       - name: Add redirect
-        run: Set-Content -Path "target/doc/index.html" -Value '<meta http-equiv="refresh" content="0;url=renga-api-rs/index.html">'
+        run: Set-Content -Path "target/doc/index.html" -Value '<meta http-equiv="refresh" content="0;url=renga_api_rs/index.html">'
 
       - name: Remove lock file
         run: Remove-Item -Path "target/doc/.lock"
