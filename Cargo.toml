@@ -10,7 +10,7 @@ readme = "README.md"
 repository = "https://github.com/whs31/renga-api-rs"
 homepage = "https://github.com/whs31/renga-api-rs"
 keywords = ["renga", "com", "api", "bindings"]
-categories = ["api-bindings", "external-ffi-bindings", "com", "windows"]
+categories = ["api-bindings", "external-ffi-bindings"]
 edition = "2021"
 
 [lib]
