@@ -25,7 +25,9 @@ pub use api::{
   Project,
   Version,
   Category,
-  EntityTypes
+  EntityTypes,
+  Entity,
+  EntityCollection
 };
 
 pub mod meta {

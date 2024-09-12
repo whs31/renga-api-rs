@@ -16,4 +16,7 @@ pub use entity_types::{
   EntityTypes,
   Category
 };
-pub use entity::Entity;
+pub use entity::{
+  Entity,
+  EntityCollection
+};
