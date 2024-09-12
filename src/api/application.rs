@@ -34,9 +34,10 @@ impl Application {
   }
 
   pub fn new_hidden() -> Result<Self> {
+    let _com = ComRuntime::new()?;
     let mut this = Self {
       handle: Dispatch::from_class_name(CLASS_NAME)?,
-      _com: ComRuntime::new()?
+      _com
     };
     log::debug!("Renga Application initialized (hidden)");
     this
@@ -160,6 +161,15 @@ mod tests {
   #[test]
   fn test_send_and_sync() {
     checks::send_and_sync::<Application>();
+  }
+
+  #[test]
+  fn test_consecutive_applications() -> anyhow::Result<()> {
+    let app1 = Application::new_hidden()?;
+    drop(app1);
+    let _ = Application::new_hidden()?;
+
+    Ok(())
   }
     
   #[test_context(RengaContext)]

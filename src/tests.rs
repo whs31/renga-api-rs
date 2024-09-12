@@ -29,14 +29,14 @@ pub fn external_file(name: &str) -> anyhow::Result<PathBuf> {
 
 impl TestContext for RengaContext {
   fn setup() -> Self {
-    let app = Application::new().unwrap();
+    let app = Application::new_hidden().unwrap();
     Self { app }
   }
 }
 
 impl TestContext for ProjectContext {
   fn setup() -> Self {
-    let mut app = Application::new().unwrap();
+    let mut app = Application::new_hidden().unwrap();
     let project = app.new_project().unwrap();
     Self { app, project }
   }

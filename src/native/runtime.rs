@@ -18,7 +18,6 @@ pub struct ComRuntime;
 impl ComRuntime {
   pub fn new() -> Result<Self> {
     Self::init()?;
-    COM_INITIALIZED.store(true, Ordering::Relaxed);
     Ok(Self)
   }
 
@@ -32,6 +31,7 @@ impl ComRuntime {
         return Err(Error::ComRuntimeInitFailed(res.0));
       }
     }
+    COM_INITIALIZED.store(true, Ordering::Relaxed);
     log::debug!("COM Runtime initialized");
     Ok(())
   }
@@ -46,6 +46,7 @@ impl Drop for ComRuntime {
     unsafe {
       CoUninitialize();
     }
+    COM_INITIALIZED.store(false, Ordering::Relaxed);
     log::debug!("COM Runtime unitialized");
   }
 }
