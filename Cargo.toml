@@ -1,6 +1,6 @@
 [package]
 name = "renga-api-rs"
-version = "0.1.1"
+version = "0.1.2"
 description = "Renga COM API bindings for Rust"
 authors = [ 
   "whs31 <riazantsev_dl@rengabim.com>"

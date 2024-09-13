@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::path::{
+  Path, 
+  PathBuf
+};
 use crate::{
   native::Dispatch,
   Result,
@@ -50,7 +53,50 @@ impl Project {
     Ok(Self { parent_handle, handle })
   }
 
+  /// Returns path to project save file or `None` if project was never saved.
+  /// 
+  /// See [Project::save]
+  #[inline]
+  pub fn path(&self) -> Result<Option<PathBuf>> {
+    let path = self
+      .handle
+      .get("FilePath")?
+      .into_string()?;
+    match path.is_empty() {
+      true => Ok(None),
+      false => Ok(Some(Path::new(&path).to_path_buf())),
+    }
+  }
+
+  /// Saves project and returns path to saved file.
+  pub fn save(&self) -> Result<PathBuf> {
+    let error = self
+      .handle
+      .call("Save", None)?
+      .as_int()?;
+    if error != 0 {
+      return Err(Error::Internal(format!("Failed to save project: error code {error}")));
+    }
+    match self.path()? {
+      Some(path) => Ok(path),
+      None => Err(Error::Internal("Failed to get project path".to_owned())),
+    }
+  }
+
+  // pub fn save_as(&self, path: &Path) -> Result<&Self> {
+  //   let str = path.to_string_lossy().to_string();
+  //   let error = self
+  //     .handle
+  //     .call("SaveAs", Some(vec![str.into()]))?
+  //     .as_int()?;
+  //   if error != 0 {
+  //     return Err(Error::Internal(format!("Failed to save project: error code {error}")));
+  //   }
+  //   Ok(self)
+  // }
+
   /// Returns `true`` if project has unsaved changes.
+  #[inline]
   pub fn has_unsaved_changes(&self) -> Result<bool> {
     self
       .handle
@@ -147,8 +193,6 @@ impl Project {
   // GetEntityNumberInTopic ([in] GUID entityId, [out, retval] int *pResult)
   // GetEntityNumberInTopicS ([in] BSTR entityId, [out, retval] int *pResult)
   // GetUndoStack ([in] GUID modelId, [out, retval] IUndoStack **ppUndoStack)
-  // HasFile ([out, retval] VARIANT_BOOL *pResult)
-  // Save ([out, retval] int *pResult)
   // SaveAs ([in] BSTR filePath, [in] enum ProjectType projectType, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
 
   // IEntityCollection 	Assemblies [get]
@@ -170,7 +214,6 @@ impl Project {
   // IEntityCollection 	ElementStyles [get]
   // IEquipmentStyleManager 	EquipmentStyleManager [get]
   // IEntityCollection 	EquipmentStyles [get]
-  // BSTR 	FilePath [get]
   // IEntityCollection 	HoleStyles [get]
   // BSTR 	JournalPath [get]
   // ILandPlotInfo 	LandPlotInfo [get]
