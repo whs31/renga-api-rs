@@ -103,14 +103,14 @@ impl Project {
   ///     .category(renga::Category::Equipment)?
   ///     .into_vec()?
   ///     .into_iter()
-  ///     .find(|entity| entity.name().unwrap_or_default() == "Pump")
+  ///     .find(|entity| entity.name == "Pump")
   ///     .unwrap();
   ///   Ok(pump_style_template)
   /// }
   /// 
   /// let pump_style_template = style_template().unwrap();
   /// assert_eq!(
-  ///   pump_style_template.name().unwrap(), 
+  ///   pump_style_template.name, 
   ///   "Pump"
   /// );
   /// ```
@@ -136,6 +136,74 @@ impl Project {
       .try_into()?;
     Ok(entity)
   }
+
+  // CreateOperationWithUndo ([in] GUID modelId, [out, retval] IOperation **ppOperation)
+  // ExportDrawingsToOpenXpsS ([in] SAFEARRAY(BSTR) drawingIds, [in] BSTR filePath, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult) 
+  // ExportDrawingsToPdf ([in] SAFEARRAY(GUID) drawingIds, [in] BSTR filePath, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
+  // ExportDrawingsToPdfS ([in] SAFEARRAY(BSTR) drawingIds, [in] BSTR filePath, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
+  // ExportToCsv ([in] BSTR folderPath, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
+  // ExportToIfc ([in] BSTR filePath, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
+  // ExportToIfc2 ([in] BSTR filePath, [in] VARIANT_BOOL overwrite, [in] IIfcExportSettings *pIfcExportSettings, [out, retval] int *pResult)
+  // GetEntityNumberInTopic ([in] GUID entityId, [out, retval] int *pResult)
+  // GetEntityNumberInTopicS ([in] BSTR entityId, [out, retval] int *pResult)
+  // GetUndoStack ([in] GUID modelId, [out, retval] IUndoStack **ppUndoStack)
+  // HasFile ([out, retval] VARIANT_BOOL *pResult)
+  // Save ([out, retval] int *pResult)
+  // SaveAs ([in] BSTR filePath, [in] enum ProjectType projectType, [in] VARIANT_BOOL overwrite, [out, retval] int *pResult)
+
+  // IEntityCollection 	Assemblies [get]
+  // IBeamStyleManager 	BeamStyleManager [get]
+  // IEntityCollection 	BeamStyles [get]
+  // IBuildingInfo 	BuildingInfo [get]
+  // IColumnStyleManager 	ColumnStyleManager [get]
+  // IEntityCollection 	ColumnStyles [get]
+  // IDataExporter 	DataExporter [get]
+  // IEntityCollection 	DoorStyles [get]
+  // IDrawingCollection 	Drawings [get]
+  // IEntityCollection 	Drawings2 [get]
+  // IEntityCollection 	DuctAccessoryStyles [get]
+  // IEntityCollection 	DuctFittingStyles [get]
+  // IEntityCollection 	DuctStyles [get]
+  // IEntityCollection 	ElectricalCircuitLineStyles [get]
+  // IEntityCollection 	ElectricalConductorStyles [get]
+  // IEntityCollection 	ElectricDistributionBoardStyles [get]
+  // IEntityCollection 	ElementStyles [get]
+  // IEquipmentStyleManager 	EquipmentStyleManager [get]
+  // IEntityCollection 	EquipmentStyles [get]
+  // BSTR 	FilePath [get]
+  // IEntityCollection 	HoleStyles [get]
+  // BSTR 	JournalPath [get]
+  // ILandPlotInfo 	LandPlotInfo [get]
+  // ILayeredMaterialManager 	LayeredMaterialManager [get]
+  // IEntityCollection 	LayeredMaterials [get]
+  // IEntityCollection 	LayoutStyles [get]
+  // IEntityCollection 	LightingFixtureStyles [get]
+  // IMaterialManager 	MaterialManager [get]
+  // IEntityCollection 	Materials [get]
+  // IEntityCollection 	MechanicalEquipmentStyles [get]
+  // IModel 	Model [get]
+  // IEntityCollection 	PageFormatStyles [get]
+  // IEntityCollection 	PipeAccessoryStyles [get]
+  // IEntityCollection 	PipeFittingStyles [get]
+  // IEntityCollection 	PipeStyles [get]
+  // IEntityCollection 	PlateStyles [get]
+  // IPlumbingFixtureStyleManager 	PlumbingFixtureStyleManager [get]
+  // IEntityCollection 	PlumbingFixtureStyles [get]
+  // IProfileDescriptionManager 	ProfileDescriptionManager [get]
+  // IEntityCollection 	Profiles [get]
+  // IProjectInfo 	ProjectInfo [get]
+  // ProjectType 	ProjectType [get]
+  // IPropertyManager 	PropertyManager [get]
+  // IEntityCollection 	RebarStyles [get]
+  // IEntityCollection 	ReinforcementGrades [get]
+  // IEntityCollection 	ReinforcementStyles [get]
+  // IReinforcementUnitStyleManager 	ReinforcementUnitStyleManager [get]
+  // IEntityCollection 	ReinforcementUnitStyles [get]
+  // ISystemStyleManager 	SystemStyleManager [get]
+  // IEntityCollection 	SystemStyles [get]
+  // IEntityCollection 	Topics [get]
+  // IEntityCollection 	WindowStyles [get]
+  // IEntityCollection 	WiringAccessoryStyles [get]
 }
 
 /// Represents project transaction, created by [Project::start_transaction].
@@ -228,21 +296,21 @@ mod tests {
     transaction.commit()?;
 
     assert!(ctx.project.has_unsaved_changes()?);
-    assert!(category.id()? > 0);
-    assert!(category.type_id()? != UUID::default());
-    assert!(category.unique_id()? != UUID::default());
+    assert!(category.id > 0);
+    assert!(category.type_id != UUID::default());
+    assert!(category.unique_id != UUID::default());
 
     let entity = ctx
       .project
       .category(Category::Equipment)?
       .into_vec()?
       .iter()
-      .find(|e| e.name().unwrap() == "asd 1")
+      .find(|e| e.name == "asd 1")
       .unwrap()
       .clone();
 
-    assert_eq!(entity.name()?, "asd 1".to_owned());
-    assert_eq!(entity.unique_id()?, category.unique_id()?);
+    assert_eq!(entity.name, "asd 1".to_owned());
+    assert_eq!(entity.unique_id, category.unique_id);
 
     Ok(())
   }

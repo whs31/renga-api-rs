@@ -1,9 +1,15 @@
+use std::{
+  fmt::Debug, 
+  os::raw::c_void, 
+  path::Path
+};
 use crate::{
   native::{
     Dispatch,
     runtime::ComRuntime,
     records::Version as NativeVersion
   },
+  win::HWND,
   Result,
   Error
 };
@@ -21,6 +27,7 @@ const CLASS_NAME: &str = "Renga.Application.1";
 /// 
 /// See [Official documentation](https://help.rengabim.com/api/interface_i_application.html)
 pub struct Application {
+  locale: String,
   handle: Dispatch,
   _com: ComRuntime
 }
@@ -35,14 +42,9 @@ impl Application {
   /// ```powershell
   /// ./RengaProfessional.exe /regserver
   /// ```
-  /// 
   /// If your Renga distribution comes from official installer, you can skip this step - Renga will be automatically registered.
   pub fn new() -> Result<Self> {
-    let _com = ComRuntime::new()?;
-    let mut this = Self {
-      handle: Dispatch::from_class_name(CLASS_NAME)?,
-      _com
-    };
+    let mut this = Self::init()?;
     log::debug!("Renga Application initialized");
     this
       .set_enabled(true)?
@@ -53,13 +55,10 @@ impl Application {
   /// Creates new headless instance of Renga application.
   /// 
   /// The ability to launch Renga without a GUI is advantageous for testing purposes. Actually, this crate using this feature for self-testing!
+  /// 
   /// See [Application::new]
   pub fn new_hidden() -> Result<Self> {
-    let _com = ComRuntime::new()?;
-    let mut this = Self {
-      handle: Dispatch::from_class_name(CLASS_NAME)?,
-      _com
-    };
+    let mut this = Self::init()?;
     log::debug!("Renga Application initialized (hidden)");
     this
       .set_enabled(true)?
@@ -135,8 +134,8 @@ impl Application {
   /// 
   /// Can be `None` if there is no active project opened.
   /// 
-  /// You can create new project by calling [Application::new_project].
-  /// Support for opening existing project is not implemented yet.
+  /// You can create new project by calling [Application::new_project] or open 
+  /// existing project by calling [Application::open_project].
   pub fn project(&mut self) -> Result<Option<Project>> {
     Ok(match self.get_project() {
       Ok(project) => project,
@@ -145,11 +144,17 @@ impl Application {
   }
 
   /// Creates new project.
+  /// 
+  /// Can return error in the following cases:
+  /// - [crate::Error::AlreadyOpened]: Project is already opened;
+  /// - [crate::Error::Internal]: Internal error happened;
+  /// 
+  /// See [Application::open_project]
   pub fn new_project(&mut self) -> Result<Project> {
     // check for unsaved changes etc
     let error = self.handle.call("CreateProject", None)?.as_int()?;
     if error != 0 {
-      return Err(Error::InvalidOperation(format!("Failed to create new project: error code {error}")));
+      return Err(Error::AlreadyOpened(format!("Failed to create new project: error code {error}")));
     }
     let project = self.get_project()?;
     if let None = project {
@@ -158,9 +163,57 @@ impl Application {
     Ok(project.unwrap())
   }
 
+  /// Opens existing project from given path.
+  /// 
+  /// Can return error in the following cases:
+  /// - [crate::Error::NonexistentPath]: Project path is invalid;
+  /// - [crate::Error::AlreadyOpened]: Project is already opened;
+  /// - [crate::Error::Internal]: Internal error happened;
+  /// 
+  /// See [Application::new_project]
+  pub fn open_project(&mut self, path: &Path) -> Result<Project> {
+    if !path.exists() {
+      return Err(Error::NonexistentPath(format!("Project path does not exist: {}", path.display())));
+    }
+    let path = path.to_string_lossy().into_owned();
+    let error = self.handle.call("OpenProject", Some(vec![path.into()]))?.as_int()?;
+    if error != 0 {
+      return Err(Error::AlreadyOpened(format!("Failed to open project: error code {error}")));
+    }
+    let project = self.get_project()?;
+    if let None = project {
+      return Err(Error::Internal("Failed to open project".to_owned()));
+    }
+    Ok(project.unwrap())
+  }
+
+  /// Returns native handle of the main window.
+  pub fn native_window_handle(&self) -> Result<HWND> {
+    let intptr = self.handle.call("GetMainWindowHandle", None)?.as_int()?;
+    if intptr == 0 {
+      return Err(Error::Internal("Failed to get native window handle".to_owned()));
+    }
+    let ptr = intptr as *mut c_void;
+    Ok(HWND(ptr))
+  }
+
   // fn has_project(&self) -> Result<bool> {
   //   Ok(self.handle.call("HasProject", None)?.as_bool()?)
   // }
+
+  fn init() -> Result<Self> {
+    let _com = ComRuntime::new()?;
+    let handle = Dispatch::from_class_name(CLASS_NAME)?;
+    Ok(Self {
+      locale: handle
+        .call("GetCurrentLocale", None)
+        .unwrap_or("C".to_owned().into())
+        .into_string()
+        .unwrap_or("C".to_owned()),
+      handle,
+      _com
+    })
+  }
 
   fn get_project(&mut self) -> Result<Option<Project>> {
     let var = self.handle.get("Project")?.into_dispatch()?;
@@ -176,12 +229,15 @@ impl Application {
   // Methods left:
   // CreateIfcExportSettings
   // CreateProjectFromTemplate
-  // GetCurrentLocale
-  // GetMainWindowHandle
   // ImportIfcProject
   // LastError
-  // OpenProject
   // SetLastError
+}
+
+impl Debug for Application {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "Renga Application {{ locale: {} }}", self.locale)
+  }
 }
 
 /// Drop implementation for Application. 

@@ -40,6 +40,13 @@ impl TryFrom<Variant> for Dispatch {
     Ok(from.into_dispatch()?)
   }
 }
+impl From<()> for Dispatch { 
+  fn from(_: ()) -> Self { 
+    Self(unsafe { 
+      IDispatch::from_raw(std::ptr::null_mut()) 
+    }) 
+  } 
+}
 
 impl Dispatch {
   pub fn as_raw(&self) -> &IDispatch { &self.0 }

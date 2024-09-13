@@ -12,8 +12,16 @@ pub enum Error {
   #[error("Invalid operation: {0}")]
   InvalidOperation(String),
 
+  /// Already opened.
+  #[error("Already opened: {0}")]
+  AlreadyOpened(String),
+
   #[error("Internal error: {0}")]
   Internal(String),
+
+  /// Filesystem path does not exist.
+  #[error("Nonexistent path: {0}")]
+  NonexistentPath(String),
 
   #[error("Invalid entity type: {0}")]
   InvalidCategory(crate::EntityTypes),

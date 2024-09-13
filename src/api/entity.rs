@@ -6,9 +6,25 @@ use crate::{
 };
 use super::UUID;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Entity {
-  handle: Dispatch
+  pub id: i32,
+  pub name: String,
+  pub type_id: UUID,
+  pub unique_id: UUID,
+  _handle: Dispatch
+}
+
+impl Default for Entity {
+  fn default() -> Self {
+    Self {
+      id: 0,
+      name: String::default(),
+      type_id: UUID::default(),
+      unique_id: UUID::default(),
+      _handle: ().into()
+    }
+  }
 }
 
 impl Entity {
@@ -16,52 +32,36 @@ impl Entity {
     if handle.is_null() {
       return Err(Error::Internal("Entity handle is null".to_owned()));
     }
-    Ok(Self { handle }) 
-  }
-
-  pub fn id(&self) -> Result<i32> {
-    self.handle.get("Id")?.as_int()
-  }
-
-  pub fn name(&self) -> Result<String> {
-    self.handle.get("Name")?.into_string()
-  }
-
-  pub fn type_id(&self) -> Result<UUID> {
-    self
-      .handle
-      .get("TypeIdS")?
-      .into_string()?
-      .trim_start_matches("{")
-      .trim_end_matches("}")
-      .parse()
-  }
-
-  pub fn unique_id(&self) -> Result<UUID> {
-    self
-      .handle
-      .get("UniqueIdS")?
-      .into_string()?
-      .trim_start_matches("{")
-      .trim_end_matches("}")
-      .parse()
-  }
-}
-
-impl Debug for Entity {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "Entity {{name: {}, id: {}, type: {}, uuid: {})}}", 
-      self.name().unwrap_or("unknown".to_owned()),
-      self.id().unwrap_or(-1),
-      self.type_id().unwrap_or_default(),
-      self.unique_id().unwrap_or_default()
-    )
+    Ok(Self { 
+      id: handle
+        .get("Id")?
+        .as_int()?,
+      name: handle
+        .get("Name")?
+        .into_string()?,
+      type_id: handle
+        .get("TypeIdS")?
+        .into_string()?
+        .trim_start_matches("{")
+        .trim_end_matches("}")
+        .parse()?,
+      unique_id: handle
+        .get("UniqueIdS")?
+        .into_string()?
+        .trim_start_matches("{")
+        .trim_end_matches("}")
+        .parse()?,
+      _handle: handle 
+    }) 
   }
 }
 
 impl Display for Entity {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.name().unwrap_or("<unknown entity>".to_owned()))
+    write!(f, "<entity: {}>", match self.name.as_str().is_empty() {
+      true => "<unknown entity>".to_owned(),
+      false => self.name.clone()
+    })
   }
 }
 

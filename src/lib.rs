@@ -40,6 +40,10 @@ pub use error::{
   Error
 };
 
+pub mod win {
+  pub use windows::Win32::Foundation::HWND;
+}
+
 pub use api::{
   Application,
   Project,
