@@ -1,6 +1,6 @@
 [package]
 name = "renga-api-rs"
-version = "0.1.3"
+version = "0.1.4"
 description = "Renga COM API bindings for Rust"
 authors = [ 
   "whs31 <riazantsev_dl@rengabim.com>"
@@ -16,6 +16,10 @@ edition = "2021"
 [lib]
 doctest = false
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies.windows]
 version = "0.58.0"
 features = [
@@ -25,11 +29,13 @@ features = [
   "Win32_System_Variant"
 ]
 
+
 [dependencies]
 thiserror = "1.0.63"
 log = "0.4.22"
 semver = "1.0.23"
 guid = "0.1.0"
+serde = { version = "1.0.210", features = ["derive"], optional = true }
 
 [dev-dependencies]
 env_logger = "0.11.5"

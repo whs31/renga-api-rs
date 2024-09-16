@@ -8,7 +8,14 @@ use super::{
   guid_parts_impl
 };
 
+#[cfg(feature="serde")]
+use serde::{
+  Deserialize, 
+  Serialize
+};
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 pub enum EntityTypes {
   CategoryType(Category)
 }
@@ -17,6 +24,7 @@ pub enum EntityTypes {
 /// 
 /// See [Official documentation](https://help.rengabim.com/api/group___project_info_types.html) for details.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature="serde", derive(Serialize))]
 pub enum Category {
   /// Duct accessory category type. 
   DuctAccessory,
@@ -121,6 +129,19 @@ impl FromStr for Category {
       _ => Err(crate::Error::ParseError(s.to_owned()))
     }
   } 
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Category {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+      D: serde::Deserializer<'de> {
+    let s = String::deserialize(deserializer)?;
+    s
+      .as_str()
+      .parse()
+      .map_err(serde::de::Error::custom)
+  }
 }
 
 #[cfg(test)]
